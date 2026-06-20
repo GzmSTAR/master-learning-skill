@@ -46,6 +46,15 @@ The skill produces a `Learning Brief` covering:
 - Paper/standard lessons
 - Risks and anti-patterns
 - Recommendation and acceptance criteria
+- Open questions
+
+## SkillOpt-Style Optimization
+
+This release includes a Microsoft SkillOpt-inspired optimization protocol. It treats `SKILL.md` as the trainable artifact, applies bounded text edits, and accepts a candidate only after a validation gate. See:
+
+- `master-learning/references/skillopt-training.md`
+- `master-learning/scripts/skillopt_train.py`
+- `master-learning/training/skillopt-run-2026-06-21.md`
 
 ## Contents
 
@@ -64,6 +73,7 @@ The scripts use only the Python standard library:
 - `paper_scan.py`
 - `source_audit.py`
 - `merge_learning_brief.py`
+- `skillopt_train.py`
 
 ## Validation
 

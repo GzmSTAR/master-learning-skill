@@ -32,20 +32,30 @@ Do not use this skill for trivial edits, direct bug fixes with clear local evide
 6. **Produce a Learning Brief.** Keep it actionable: what to build, what to avoid, what to verify, and what assumptions remain.
 7. **Proceed only after grounding.** Use the Learning Brief to make the implementation plan or code changes. If the brief exposes unresolved critical risk, ask or research further before implementation.
 
+## SkillOpt-Style Validation Gate
+
+This skill is optimized with a SkillOpt-inspired loop: rollout tasks, reflect on failures, apply bounded edits, and keep a candidate only when validation improves. At task time, use the same discipline:
+
+- Treat the Learning Brief as the trainable procedure for the current project, not as a decorative report.
+- Make bounded updates when evidence changes: add, delete, or replace only the rules needed to improve the next decision.
+- Preserve rejected assumptions in the brief so they are not reintroduced later.
+- Before implementation, run a validation gate: source coverage, local code fit, risk review, and acceptance criteria.
+- If the validation gate fails, improve the brief instead of coding through uncertainty.
+
 ## Output Contract
 
 Every Learning Brief must include:
 
-- Task and learning objective
-- Research depth used and why
-- Source table with URLs/paths, type, date/currency when available, and reliability
-- Domain model: key concepts, objects, terms, and relationships
-- Implementation patterns that matter for the task
-- GitHub/code lessons when repositories or local code were reviewed
-- Paper/standard lessons when academic or specification sources were reviewed
-- Risks, edge cases, and anti-patterns
-- Recommended approach and acceptance criteria
-- Open questions and confidence level
+- `Task`: learning objective, target environment, success criteria, research depth, and confidence.
+- `Sources`: URLs/paths, type, date/currency when available, reliability, and key use.
+- `Domain Model`: key concepts, objects, terms, and relationships.
+- `Local Code Lessons`: project structure, conventions, constraints, and relevant files when local code exists.
+- `GitHub/Code Lessons`: repositories reviewed, useful patterns, license/reuse notes, and issues.
+- `Paper/Standard Lessons`: methods, requirements, limits, and assumptions.
+- `Implementation Patterns`: architecture, APIs/contracts, data/control flow, tests, and operational constraints.
+- `Risks and Anti-Patterns`: edge cases, weak assumptions, and things to avoid.
+- `Recommendation`: recommended approach, acceptance criteria, and next steps.
+- `Open Questions`: unresolved decisions or missing evidence.
 
 Use `references/learning-brief-template.md` when a structured Markdown artifact is useful.
 
@@ -57,6 +67,7 @@ Read these files only when relevant:
 - `references/source-quality-rubric.md`: score and compare sources.
 - `references/github-mining.md`: inspect GitHub repositories without being fooled by stars alone.
 - `references/paper-learning.md`: turn papers into engineering constraints.
+- `references/skillopt-training.md`: SkillOpt-inspired optimization protocol used for this skill.
 - `references/learning-brief-template.md`: produce a consistent brief.
 - `references/anti-patterns.md`: avoid common failure modes.
 
@@ -67,6 +78,7 @@ Scripts are optional helpers:
 - `scripts/paper_scan.py`: search CrossRef, arXiv, and PubMed public APIs.
 - `scripts/source_audit.py`: check source coverage and warn about weak grounding.
 - `scripts/merge_learning_brief.py`: merge scan outputs into a brief draft.
+- `scripts/skillopt_train.py`: run the local SkillOpt-style static training and validation benchmark.
 
 ## Integrity Rules
 
