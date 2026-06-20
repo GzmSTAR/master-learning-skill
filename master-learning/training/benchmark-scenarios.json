@@ -1,0 +1,44 @@
+[
+  {
+    "id": "latest-framework-api",
+    "prompt": "Use the latest framework API correctly before coding.",
+    "expected_depth": "refresh",
+    "weight": 2,
+    "must_have": ["official docs", "release notes", "migration notes", "dependency versions"]
+  },
+  {
+    "id": "paper-reproduction",
+    "prompt": "Reproduce a paper-backed method in code.",
+    "expected_depth": "deep",
+    "weight": 2,
+    "must_have": ["paper method", "assumptions", "evaluation setup", "code/data availability"]
+  },
+  {
+    "id": "github-adaptation",
+    "prompt": "Adapt a high-star GitHub project safely.",
+    "expected_depth": "deep",
+    "weight": 2,
+    "must_have": ["license", "recent activity", "examples", "tests", "issues"]
+  },
+  {
+    "id": "local-project-first",
+    "prompt": "Plan a feature inside an existing repo.",
+    "expected_depth": "scout",
+    "weight": 2,
+    "must_have": ["manifests", "configs", "tests", "existing conventions"]
+  },
+  {
+    "id": "low-risk-skip",
+    "prompt": "Fix a typo without research.",
+    "expected_depth": "skip",
+    "weight": 2,
+    "must_have": ["low-risk direct fixes", "skip deep research", "not needed"]
+  },
+  {
+    "id": "network-degraded",
+    "prompt": "Research when network access fails.",
+    "expected_depth": "scout",
+    "weight": 2,
+    "must_have": ["network-degraded", "missing external verification", "local evidence"]
+  }
+]

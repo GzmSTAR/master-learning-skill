@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SkillOpt-style static training and validation for master-learning."""
+"""SkillOpt-style scenario training and validation for master-learning."""
 
 from __future__ import annotations
 
@@ -31,7 +31,9 @@ COMMON_CHECKS = [
     Check("validation_gate", ["validation gate", "acceptance criteria", "confidence"]),
     Check("anti_fabrication", ["Never fabricate", "network access fails", "Prefer primary"]),
     Check("skillopt_loop", ["rollout", "reflect", "bounded edits", "validation"]),
-    Check("resource_routing", ["references/", "scripts/", "source_audit.py"]),
+    Check("optimization_controls", ["Text learning rate", "Rejected assumption buffer", "Held-out validation", "Slow update"]),
+    Check("regression_skip", ["trivial", "skip", "over-research"]),
+    Check("resource_routing", ["references/", "scripts/", "source_audit.py", "benchmark-scenarios.json"]),
 ]
 
 HARNESS_CHECKS = {
@@ -46,52 +48,128 @@ HARNESS_CHECKS = {
     ],
 }
 
+DEFAULT_SCENARIOS = [
+    {
+        "id": "latest-framework-api",
+        "prompt": "Use the latest framework API correctly before coding.",
+        "must_have": ["official docs", "release notes", "migration notes", "dependency versions"],
+        "expected_depth": "refresh",
+    },
+    {
+        "id": "paper-reproduction",
+        "prompt": "Reproduce a paper-backed method in code.",
+        "must_have": ["paper method", "assumptions", "evaluation setup", "code/data availability"],
+        "expected_depth": "deep",
+    },
+    {
+        "id": "github-adaptation",
+        "prompt": "Adapt a high-star GitHub project safely.",
+        "must_have": ["license", "recent activity", "examples", "tests", "issues"],
+        "expected_depth": "deep",
+    },
+    {
+        "id": "local-project-first",
+        "prompt": "Plan a feature inside an existing repo.",
+        "must_have": ["manifests", "configs", "tests", "existing conventions"],
+        "expected_depth": "scout",
+    },
+    {
+        "id": "low-risk-skip",
+        "prompt": "Fix a typo without research.",
+        "must_have": ["low-risk direct fixes", "skip deep research", "not needed"],
+        "expected_depth": "skip",
+    },
+    {
+        "id": "network-degraded",
+        "prompt": "Research when network access fails.",
+        "must_have": ["network-degraded", "missing external verification", "local evidence"],
+        "expected_depth": "scout",
+    },
+]
 
-def score_text(text: str, harness: str) -> tuple[float, list[dict]]:
+
+def contains(text: str, phrase: str) -> bool:
+    return re.search(re.escape(phrase), text, re.IGNORECASE) is not None
+
+
+def load_scenarios(path: str | None) -> list[dict]:
+    if not path:
+        return DEFAULT_SCENARIOS
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def score_text(text: str, harness: str, scenarios: list[dict]) -> tuple[float, list[dict]]:
     checks = COMMON_CHECKS + HARNESS_CHECKS[harness]
     rows = []
     points = 0
     total = sum(check.weight for check in checks)
     for check in checks:
-        found = all(re.search(re.escape(pattern), text, re.IGNORECASE) for pattern in check.patterns)
+        found = all(contains(text, pattern) for pattern in check.patterns)
         if found:
             points += check.weight
         rows.append({"check": check.name, "pass": found, "weight": check.weight})
+
+    for scenario in scenarios:
+        required = scenario.get("must_have", [])
+        found_terms = [term for term in required if contains(text, term)]
+        passed = len(found_terms) == len(required)
+        weight = int(scenario.get("weight", 2))
+        total += weight
+        if passed:
+            points += weight
+        rows.append(
+            {
+                "check": f"scenario:{scenario['id']}",
+                "pass": passed,
+                "weight": weight,
+                "missing": [term for term in required if term not in found_terms],
+            }
+        )
     return points / total, rows
 
 
 def suggested_edits(rows: list[dict]) -> list[str]:
-    missing = [row["check"] for row in rows if not row["pass"]]
     suggestions = []
-    if "skillopt_loop" in missing:
-        suggestions.append("Add a SkillOpt-style loop section with rollout, reflection, bounded edits, and validation gates.")
-    if "validation_gate" in missing:
-        suggestions.append("Add a pre-implementation validation gate covering source coverage, confidence, and acceptance criteria.")
-    if "local_truth_first" in missing:
-        suggestions.append("Require local repo inspection before external assumptions.")
-    if "resource_routing" in missing:
-        suggestions.append("List reference files and helper scripts explicitly.")
-    if not suggestions and missing:
-        suggestions.append("Patch missing benchmark terms: " + ", ".join(missing))
+    for row in rows:
+        if row["pass"]:
+            continue
+        name = row["check"]
+        if name.startswith("scenario:"):
+            suggestions.append(f"Add bounded guidance for {name.removeprefix('scenario:')}: {', '.join(row.get('missing', []))}.")
+        elif name == "optimization_controls":
+            suggestions.append("Add SkillOpt controls: text learning rate, rejected buffer, held-out validation, and slow update.")
+        elif name == "regression_skip":
+            suggestions.append("Add an explicit regression rule to skip deep research for trivial direct fixes.")
+        elif name == "validation_gate":
+            suggestions.append("Add a pre-implementation validation gate covering source coverage, confidence, and acceptance criteria.")
+        elif name == "resource_routing":
+            suggestions.append("List reference files, helper scripts, and benchmark scenarios explicitly.")
+        else:
+            suggestions.append(f"Patch missing benchmark check: {name}.")
     return suggestions
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a SkillOpt-style static benchmark for the master-learning skill.")
+    parser = argparse.ArgumentParser(description="Run a SkillOpt-style scenario benchmark for the master-learning skill.")
     parser.add_argument("--skill", required=True, help="Path to SKILL.md.")
     parser.add_argument("--harness", choices=["codex", "claude"], required=True)
-    parser.add_argument("--iterations", type=int, default=3)
+    parser.add_argument("--scenarios", help="JSON scenario file. Defaults to built-in scenarios.")
+    parser.add_argument("--iterations", type=int, default=12)
     parser.add_argument("--output", "-o", help="Write Markdown training report.")
     parser.add_argument("--json", action="store_true", help="Emit JSON to stdout.")
     args = parser.parse_args()
 
     text = Path(args.skill).read_text(encoding="utf-8")
+    scenarios = load_scenarios(args.scenarios)
     history = []
     best_score = 0.0
+    best_failed: list[str] = []
     for iteration in range(1, args.iterations + 1):
-        score, rows = score_text(text, args.harness)
+        score, rows = score_text(text, args.harness, scenarios)
         accepted = score >= best_score
-        best_score = max(best_score, score)
+        if accepted:
+            best_score = score
+            best_failed = [row["check"] for row in rows if not row["pass"]]
         history.append(
             {
                 "iteration": iteration,
@@ -106,8 +184,11 @@ def main() -> int:
         "date": date.today().isoformat(),
         "harness": args.harness,
         "skill": args.skill,
+        "scenario_count": len(scenarios),
+        "iterations": args.iterations,
         "best_score": round(best_score, 4),
-        "passes_release_gate": best_score >= 0.90,
+        "best_failed": best_failed,
+        "passes_release_gate": best_score >= 0.95 and not best_failed,
         "history": history,
     }
 
@@ -116,10 +197,12 @@ def main() -> int:
 
     if args.output:
         lines = [
-            f"# SkillOpt-Style Training Run: {args.harness}",
+            f"# SkillOpt-Style Scenario Training Run: {args.harness}",
             "",
             f"Date: {payload['date']}",
             f"Skill: `{args.skill}`",
+            f"Scenarios: {payload['scenario_count']}",
+            f"Iterations: {payload['iterations']}",
             f"Best score: {payload['best_score']}",
             f"Release gate: {'PASS' if payload['passes_release_gate'] else 'FAIL'}",
             "",
