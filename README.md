@@ -6,6 +6,12 @@
 
 The core idea is simple: a master keeps the mind of an apprentice. Before building, learn the field.
 
+## The Problem It Solves
+
+AI coding agents are fast, but unfamiliar domains often punish speed. If an agent starts coding before reading current docs, paper assumptions, GitHub examples, local project conventions, and known failure modes, the result can be technically plausible but wrong.
+
+`master-learning` adds a repeatable research gate before implementation. It turns vague uncertainty into a source-backed `Learning Brief`, so Codex can plan and build from evidence instead of stale memory or guesses.
+
 ## What This Skill Does
 
 Many coding agents can write code quickly, but they often fail when the task requires learning first. A new framework, a paper-backed method, a GitHub ecosystem, a changing API, or a project with strong local conventions can make direct implementation risky.
@@ -81,14 +87,30 @@ The 128-iteration stability run reached `score 1.0` and passed the release gate.
 
 ## Install
 
-Clone this repository, then copy the skill folder into your Codex skills directory:
+Clone this repository, then copy the `master-learning` skill folder into your Codex skills directory.
+
+### Windows PowerShell
 
 ```powershell
 git clone https://github.com/GzmSTAR/master-learning-skill.git
 Copy-Item -Recurse -Force .\master-learning-skill\master-learning "$env:USERPROFILE\.codex\skills\master-learning"
 ```
 
+### macOS / Linux
+
+```bash
+git clone https://github.com/GzmSTAR/master-learning-skill.git
+mkdir -p ~/.codex/skills
+cp -R master-learning-skill/master-learning ~/.codex/skills/master-learning
+```
+
 Restart Codex if the skill list does not refresh automatically.
+
+### Quick Check
+
+```bash
+ls ~/.codex/skills/master-learning
+```
 
 ## Usage
 
