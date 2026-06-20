@@ -1,0 +1,4 @@
+interface:
+  display_name: "Master Learning"
+  short_description: "Research and learn a domain before building."
+  default_prompt: "Use $master-learning to study this domain, produce a Learning Brief, then plan implementation."
