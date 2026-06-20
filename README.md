@@ -57,8 +57,11 @@ This release includes a Microsoft SkillOpt-inspired optimization protocol. It tr
 - `master-learning/training/skillopt-run-2026-06-21.md`
 - `master-learning/training/benchmark-scenarios.json`
 - `master-learning/training/skillopt-run-2026-06-21-round2.md`
+- `master-learning/training/skillopt-run-2026-06-21-128.md`
 
 The second training run uses 6 held-out scenarios across latest API use, paper reproduction, GitHub adaptation, local-project-first work, low-risk skip behavior, and network-degraded research.
+
+The 128-iteration run repeats the same held-out scenario suite to verify stability after repeated SkillOpt-style rollouts.
 
 ## Contents
 
